@@ -10,12 +10,23 @@ class CategoryController extends Controller
 {
     public function index()
     {
+        return view('categories.index');
+    }
+    
+    public function getAllList(Request $request)
+    {
         $categories = Category::all();
-        return view('categories.index', compact('categories'));
+        return response()->json(['data' => $categories]);
     }
 
-    public function show(Category $category)
+    public function show($id)
     {
-        return view('categories.show', compact('category'));
+        return view('categories.show', compact('id'));
+    }
+
+    public function getDetails(Request $request, $id)
+    {
+        $categories = Category::where('id', $id)->first();
+        return response()->json(['data' => $categories]);
     }
 }

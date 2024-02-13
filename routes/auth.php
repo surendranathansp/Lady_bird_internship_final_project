@@ -19,11 +19,8 @@ use App\Http\Controllers\AuthenticatedSessionController;
 
 
 Route::middleware('guest')->group(function () {
-    Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])
-        ->name('login');
-
-    Route::post('/admin/login', [AdminAuthController::class, 'login'])
-        ->name('login');
+    Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('login');
 
         
 
@@ -31,6 +28,7 @@ Route::middleware('guest')->group(function () {
 
         Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotForm'])->name('password.request');
         Route::post('/forgot-password', [ForgotPasswordController::class, 'forgotPassword'])->name('password.email');
+     
         Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
         Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.update');
              

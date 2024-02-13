@@ -12,7 +12,7 @@
         <!-- Validation Errors -->
         <x-auth-validation-errors class="mb-4" :errors="$errors" />
 
-        <form method="POST" action="{{ route('login') }}">
+        <form id="loginForm" method="POST" action="{{ route('login') }}">
             @csrf
 
             <!-- Email Address -->
@@ -47,11 +47,50 @@
                     </a>
                 @endif
 
-                <x-button class="ml-3">
+                <x-button id="loginButton" class="ml-3">
                     {{ __('login.log_in') }}
                 </x-button>
             </div>
         </form>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('loginForm').addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const formData = new FormData(event.target);
+
+                    fetch('/admin/login', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => {
+                        console.log('success');
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('successff');
+                        if (data.success) {
+                            window.location.href = '/admin';
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while logging in.');
+                    });
+                });
+            });
+
+        </script>
+
     </x-auth-card>
 </x-guest-layout>
-

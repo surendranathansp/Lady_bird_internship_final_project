@@ -5,33 +5,52 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AdminAuthController extends Controller
 {
-    // Show admin login form
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    // Admin login
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string',
+            'password' => 'required|string'
+        ], [
+            'email.required' => 'The email field is required.',
+            'password.required' => 'The password field is required.',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            // Authentication passed
-            return redirect()->intended('/dashboard');
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()->all(),
+            ], 422);
         }
 
-        // Authentication failed
-        throw ValidationException::withMessages([
-            'email' => [trans('auth.failed')],
-        ]);
+        $credentials = $request->only('email', 'password');
+        if (Auth::attempt($credentials)) {
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Login successful'], 200);
+            } else {
+                return response()->json(['success' => true, 'message' => 'Already Loged in.'], 200);
+            }
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => false, 'message' => trans('auth.failed')], 401);
+        } else {
+            // If it's a traditional form submission, throw a ValidationException with the error message
+            throw ValidationException::withMessages([
+                'success' => false,
+                'email' => [trans('auth.failed')],
+            ]);
+        }
     }
 
     // Show admin reset password form
@@ -40,12 +59,7 @@ class AdminAuthController extends Controller
         return view('admin.auth.reset');
     }
 
-    // Admin reset password
-    public function resetPassword(Request $request)
-    {
-        // Add your custom reset password logic here
-    }
-
+   
     // Show admin forgot password form
     public function showForgotForm()
     {

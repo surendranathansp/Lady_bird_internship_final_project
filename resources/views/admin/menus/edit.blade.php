@@ -13,14 +13,14 @@
             </div>
             <div class="m-2 p-2 bg-slate-100 rounded">
                 <div class="space-y-8 divide-y divide-gray-200 w-1/2 mt-10">
-                    <form method="POST" action="{{ route('admin.menus.update', $menu->id) }}"
+                    <form id="updateCategoryForm" method="POST" action="{{ route('admin.menus.update', $id) }}"
                         enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="sm:col-span-6">
                             <label for="name" class="block text-sm font-medium text-gray-700"> Name </label>
                             <div class="mt-1">
-                                <input type="text" id="name" name="name" value="{{ $menu->name }}"
+                                <input type="text" id="name" name="name" value=""
                                     class="block w-full appearance-none bg-white border border-gray-400 rounded-md py-2 px-3 text-base leading-normal transition duration-150 ease-in-out sm:text-sm sm:leading-5" />
                             </div>
                             @error('name')
@@ -30,7 +30,8 @@
                         <div class="sm:col-span-6">
                             <label for="image" class="block text-sm font-medium text-gray-700"> Image </label>
                             <div>
-                                <img class="w-32 h-32" src="{{ Storage::url($menu->image) }}">
+                                <input type="hidden" name="old_image" value="">
+                                <img class="w-32 h-32" src="">
                             </div>
                             <div class="mt-1">
                                 <input type="file" id="image" name="image"
@@ -40,40 +41,17 @@
                                 <div class="text-sm text-red-400">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="sm:col-span-6">
-                            <label for="price" class="block text-sm font-medium text-gray-700"> Price </label>
-                            <div class="mt-1">
-                                <input type="number" min="0.00" max="10000.00" step="0.01" id="price" name="price"
-                                    value="{{ $menu->price }}"
-                                    class="block w-full appearance-none bg-white border border-gray-400 rounded-md py-2 px-3 text-base leading-normal transition duration-150 ease-in-out sm:text-sm sm:leading-5" />
-                            </div>
-                            @error('price')
-                                <div class="text-sm text-red-400">{{ $message }}</div>
-                            @enderror
-                        </div>
                         <div class="sm:col-span-6 pt-5">
-                            <label for="body" class="block text-sm font-medium text-gray-700">Description</label>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
                             <div class="mt-1">
-                                <textarea id="body" rows="3" name="description"
+                                <textarea id="description" rows="3" name="description"
                                     class="shadow-sm focus:ring-indigo-500 appearance-none bg-white border py-2 px-3 text-base leading-normal transition duration-150 ease-in-out focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                {{ $menu->description }}
+                                    
                                 </textarea>
                             </div>
                             @error('description')
                                 <div class="text-sm text-red-400">{{ $message }}</div>
                             @enderror
-                        </div>
-                        <div class="sm:col-span-6 pt-5">
-                            <label for="categories" class="block text-sm font-medium text-gray-700">Categories</label>
-                            <div class="mt-1">
-                                <select id="categories" name="categories[]" class="form-multiselect block w-full mt-1"
-                                    multiple>
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}" @selected($menu->categories->contains($category))>
-                                            {{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
                         </div>
                         <div class="mt-6 p-4">
                             <button type="submit"
@@ -85,4 +63,62 @@
             </div>
         </div>
     </div>
+
+    <script>
+        fetch('/api/menus/details/' + {{$id}})
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.data.id);
+                $("#name").val(data?.data?.name);
+                $("#description").val(data?.data?.description);
+                $("input[name='old_image']").val(data?.data?.image);
+                $("img").attr("src", data?.data?.image);
+            });
+
+        document.addEventListener('submit', async function(event) {
+            if (event.target.id === 'updateCategoryForm') {
+                event.preventDefault();
+
+                try {
+                    const response = await fetch(event.target.action, {
+                        method: event.target.method,
+                        body: new FormData(event.target),
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        handleSuccess(data);
+                    } else {
+                        handleFailure(data);
+                    }
+                } catch (error) {
+                    handleError(error);
+                }
+            }
+        });
+
+        function handleSuccess(data) {
+            console.log('Success:', data);
+            alert(data.message);
+            window.location.href = '{{ route('admin.menus.index') }}';
+        }
+
+        function handleFailure(data) {
+            if (data.errors) {
+                alert('Validation error: ' + data.errors.join(', '));
+            } else {
+                alert('Failed to update category: ' + data.message);
+            }
+        }
+
+        function handleError(error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating category.');
+        }
+    </script>
 </x-admin-layout>

@@ -13,7 +13,10 @@
             </div>
             <div class="m-2 p-2 bg-slate-100 rounded">
                 <div class="space-y-8 divide-y divide-gray-200 w-1/2 mt-10">
-                    <form method="POST" action="{{ route('admin.categories.store') }}" enctype="multipart/form-data">
+                    <div id="category-info">
+                        <!-- Category information will be displayed here -->
+                    </div>
+                    <form id="create-category-form" method="POST" action="{{ route('admin.categories.store') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="sm:col-span-6">
                             <label for="name" class="block text-sm font-medium text-gray-700"> Name </label>
@@ -51,8 +54,54 @@
                         </div>
                     </form>
                 </div>
-
             </div>
         </div>
     </div>
+
+    <script>
+
+        document.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            try {
+                const response = await fetch(event.target.action, {
+                    method: event.target.method,
+                    body: new FormData(event.target),
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                if (data.success) {
+                    handleSuccess(data);
+                } else {
+                    handleFailure(data);
+                }
+            } catch (error) {
+                handleError(error);
+            }
+        });
+
+        function handleSuccess(data) {
+            console.log('Success:', data);
+            alert(data.message);
+            window.location.href = '{{ route('admin.categories.index') }}';
+        }
+
+        function handleFailure(data) {
+            console.log('Failure:', data);
+            if (data.errors) {
+                alert('Validation error: ' + data.errors.join(', '));
+            } else {
+                alert('Failed to create category: ' + data.message);
+            }
+        }
+
+        function handleError(error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating category.');
+        }
+    </script>
 </x-admin-layout>

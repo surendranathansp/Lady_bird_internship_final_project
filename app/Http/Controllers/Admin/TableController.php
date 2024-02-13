@@ -3,100 +3,146 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\TableStoreRequest;
 use App\Models\Table;
 use Illuminate\Http\Request;
 
-use function Ramsey\Uuid\v1;
+use Illuminate\Support\Facades\Validator;
+use Yajra\DataTables\Facades\DataTables;
 
 class TableController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $tables = Table::all();
-        return view('admin.tables.index', compact('tables'));
+        return view('admin.tables.index');
+    }
+    public function getAllList()
+    {
+        $table = Table::select('*')->get();
+        return DataTables::of($table)
+            ->addColumn('action', function ($menu) {
+                return '<a href="/admin/table/edit/' . $menu->id . '" class="btn btn-primary">Edit</a>
+                        <form deleteTableFunction(' . $menu->id . ') action="/admin/table/delete/' . $menu->id . '" method="POST" class="d-inline">
+                            ' . csrf_field() . '
+                            ' . method_field('DELETE') . '
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>';
+            })
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    public function getDetails(Request $request, $id)
+    {
+        $tables = Table::where('id', $id)->first();
+        return response()->json(['data' => $tables]);
+    }
     public function create()
     {
         return view('admin.tables.create');
     }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(TableStoreRequest $request)
+    public function store(Request $request)
     {
-        Table::create([
-            'name' => $request->name,
-            'guest_number' => $request->guest_number,
-            'status' => $request->status,
-            'location' => $request->location,
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'guest_number' => 'required|string',
+                'location' => 'required|string',
+            ], [
+                'name.required' => 'The name field is required.',
+                'guest_number.required' => 'The guest_number field is required.',
+                'location.required' => 'The location field is required.',
+            ]);
 
-        return to_route('admin.tables.index')->with('success', 'Table created successfully.');
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()->all(),
+                ], 422);
+            }
+
+            $tables = Table::create([
+                'name' => $request->name,
+                'guest_number' => $request->guest_number,
+                'status' => @$request->status ?? 0,
+                'location' => $request->location,
+            ]);
+
+            $response = [
+                'success' => true,
+                'data' => $tables,
+                'message' => 'Table create successfully'
+            ];
+            return response()->json($response);
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'message' => 'An error occurred while creating Table.'
+            ];
+            return response()->json($response, 500);
+        }
+    }
+    public function edit($id)
+    {
+        return view('admin.tables.edit', array('id' => $id));
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'guest_number' => 'required|string',
+                'location' => 'required|string',
+            ], [
+                'name.required' => 'The name field is required.',
+                'guest_number.required' => 'The guest_number field is required.',
+                'location.required' => 'The location field is required.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()->all(),
+                ], 422);
+            }
+            $tables = Table::findOrFail($id);
+            $tables->name = $request->name;
+            $tables->guest_number = $request->guest_number;
+            $tables->status = @$request->status ?? 0;
+            $tables->location = $request->location;
+            $tables->save();
+
+            $response = [
+                'success' => true,
+                'data' => $tables,
+                'message' => 'Table updated successfully'
+            ];
+            return response()->json($response);
+        } catch (\Exception $e) {
+            $response = [
+                'message' => 'An error occurred while updating Table.'
+            ];
+            return response()->json($response, 500);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Table $table)
+    public function destroy($id)
     {
-        return view('admin.tables.edit', compact('table'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(TableStoreRequest $request, Table $table)
-    {
-        $table->update($request->validated());
-
-        return to_route('admin.tables.index')->with('success', 'Table updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Table $table)
-    {
-        $table->reservations()->delete();
-        $table->delete();
-
-        return to_route('admin.tables.index')->with('danger', 'Table daleted successfully.');
+        try {
+            $tables = Table::findOrFail($id)->delete();
+            $response = [
+                'success' => true,
+                'data' => $tables,
+                'message' => 'Table deleted successfully'
+            ];
+            return response()->json($response);
+        } catch (\Exception $e) {
+            $response = [
+                'message' => 'An error occurred while deleting Table.'
+            ];
+            return response()->json($response, 500);
+        }
     }
 }

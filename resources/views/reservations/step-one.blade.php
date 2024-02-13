@@ -106,4 +106,48 @@
         </div>
 
     </div>
+<script>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Step One Form Submission
+        $('#stepOneForm').submit(function(event) {
+            event.preventDefault();
+
+            $.ajax({
+                url: '/reservation/step-one',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    window.location.href = response.redirectTo; // Redirect to step two
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                    // Handle error messages or show validation errors
+                }
+            });
+        });
+
+        // Step Two Form Submission
+        $('#stepTwoForm').submit(function(event) {
+            event.preventDefault();
+
+            $.ajax({
+                url: 'web-api/reservation/step-two',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    window.location.href = response.redirectTo; // Redirect to thank you page
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                    // Handle error messages or show validation errors
+                }
+            });
+        });
+    });
+</script>
+
+    </script>
+    
 </x-guest-layout>

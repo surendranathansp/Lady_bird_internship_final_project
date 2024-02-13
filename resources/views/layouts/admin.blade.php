@@ -16,6 +16,7 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body class="font-sans antialiased">
@@ -49,8 +50,8 @@
                 <x-admin-nav-link :href="route('admin.menus.index')" :active="request()->routeIs('admin.menus.index')">
                     {{ __('Menus') }}
                 </x-admin-nav-link>
-                <x-admin-nav-link :href="route('admin.tables.index')"
-                    :active="request()->routeIs('admin.tables.index')">
+                <x-admin-nav-link :href="route('admin.table.index')"
+                    :active="request()->routeIs('admin.table.index')">
                     {{ __('Tables') }}
                 </x-admin-nav-link>
                 <x-admin-nav-link :href="route('admin.reservations.index')"

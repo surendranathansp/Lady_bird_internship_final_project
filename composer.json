@@ -13,7 +13,8 @@
         "laravel/framework": "^9.2",
         "laravel/sanctum": "^2.14.1",
         "laravel/tinker": "^2.7",
-        "rakibdevs/openweather-laravel-api": "^1.9"
+        "rakibdevs/openweather-laravel-api": "^1.9",
+        "yajra/laravel-datatables-oracle": "^10.11"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

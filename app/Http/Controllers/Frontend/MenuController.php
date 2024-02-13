@@ -14,4 +14,9 @@ class MenuController extends Controller
 
         return view('menus.index', compact('menus'));
     }
+    public function getAllList(Request $request)
+    {
+        $menu = menu::all();
+        return response()->json(['data' => $menu]);
+    }
 }

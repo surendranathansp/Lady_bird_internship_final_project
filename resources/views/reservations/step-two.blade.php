@@ -17,7 +17,7 @@
                                     {{trans('step-two.step')}}</div>
                             </div>
 
-                            <form method="POST" action="{{ route('reservations.store.step.two') }}">
+                            <form id="reservationForm" method="POST" action="{{ route('reservations.store.step.two') }}">
                                 @csrf
                                 <div class="sm:col-span-6 pt-5">
                                     <label for="status" class="block text-sm font-medium text-white">{{trans('step-two.table_option')}}</label>
@@ -40,7 +40,7 @@
                                 <div class="mt-6 p-4 flex justify-between">
                                     <a href="{{ route('reservations.step.one') }}"
                                         class="px-4 py-2 bg-indigo-500 hover:bg-green-700 rounded-lg text-white">{{trans('step-two.previous')}}</a>
-                                    <button type="submit"
+                                    <button type="button" id="submitBtn"
                                         class="px-4 py-2 bg-indigo-500 hover:bg-green-700 rounded-lg text-white">{{trans('step-two.make_reservation')}}</button>
                                 </div>
                             </form>
@@ -52,3 +52,31 @@
 
     </div>
 </x-guest-layout>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('submitBtn').addEventListener('click', function () {
+            const formData = new FormData(document.getElementById('reservationForm'));
+            
+            fetch('/reservations/store/step-two', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/thankyou';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while making the reservation.');
+            });
+        });
+    });
+</script>
